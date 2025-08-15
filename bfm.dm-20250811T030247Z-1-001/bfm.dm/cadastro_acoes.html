@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastro de Operação Executada - BFM Frotas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="css/operacoes.css">
+    <style>
+        /* Custom animation for dropdown fade-in (downwards) */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-down {
+            animation: fadeInDown 0.3s ease-out forwards;
+            transform-origin: top;
+        }
+
+        /* Custom animation for submenu fade-in (sideways) */
+        @keyframes fadeInRight {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .animate-fade-in-right {
+            animation: fadeInRight 0.3s ease-out forwards;
+            transform-origin: left;
+        }
+
+        /* Custom scrollbar styling for a consistent look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: rgb(20, 139, 36); /* Semi-transparent primary green */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(26, 77, 62, 0.1); /* Lighter track */
+        }
+
+        /* Base dropdown item styling */
+        .dropdown-item {
+            padding: 0.75rem 1.5rem;
+            color: #374151; /* gray-700 */
+            font-weight: 500;
+            white-space: nowrap;
+            display: block; /* Ensure it takes full width */
+            width: 100%;
+            text-align: left;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .dropdown-item:hover {
+            background-color: #e0f2f7; /* lighter blue/greenish hue for hover */
+            color: #1e7e15; /* primary green for hover text */
+        }
+
+        /* Specific styling for nested submenu trigger buttons */
+        .submenu-trigger {
+            width: 100%;
+            text-align: left;
+            padding: 0.75rem 1.5rem;
+            color: #374151;
+            font-weight: 500;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: transparent; /* Reset button default bg */
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .submenu-trigger:hover {
+            background-color: #e0f2f7;
+            color: #0da326;
+        }
+
+        /* Styles for dropdown content (main menus) */
+        .dropdown-content {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-xl */
+            position: absolute;
+            top: 100%;
+            left: 0;
+            min-width: 220px;
+            background-color: white;
+            border-radius: 0.75rem;
+            z-index: 1000; /* This seems reasonable for a dropdown */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Styles for submenu content (nested menus) */
+        .submenu-content {
+            position: absolute;
+            top: 0;
+            left: 100%; /* Opens to the right */
+            min-width: 220px;
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            z-index: 10000; /* Higher than main dropdown for submenus */
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #e2e8f0; /* Small border for visual separation */
+        }
+
+        /* Adjust caret rotation for main dropdowns */
+        .ph-caret-down {
+            transition: transform 0.2s ease-in-out;
+        }
+        .menu-link[aria-expanded="true"] .ph-caret-down {
+            transform: rotate(180deg); /* Rotates up when open */
+        }
+
+        /* Adjust caret rotation for submenus */
+        .ph-caret-right {
+            transition: transform 0.2s ease-in-out;
+        }
+        .submenu-trigger[aria-expanded="true"] .ph-caret-right {
+            transform: rotate(90deg); /* Rotates down when open (if opening right) */
+        }
+
+        /* Active menu styling */
+        .active-menu {
+            color: #facc15 !important; /* yellow-300 */
+            border-bottom: 4px solid #facc15 !important; /* yellow-300 */
+        }
+
+        /* Active dropdown item styling */
+        .active-menu-dropdown-item {
+            background-color: #e0f2f7; /* Lighter background for active item */
+            color: #1e7e15; /* Primary green for active text */
+            font-weight: 600; /* Bolder text for active item */
+        }
+
+        /* Active submenu trigger styling */
+        .active-menu-submenu-trigger {
+            background-color: #e0f2f7; /* Lighter background for active trigger */
+            color: #1e7e15; /* Primary green for active trigger text */
+            font-weight: 600; /* Bolder text for active trigger */
+        }
+
+        /* Responsive adjustments for mobile */
+        @media (max-width: 767px) {
+            .md\:flex-row {
+                flex-direction: column;
+            }
+            .md\:mb-0 {
+                margin-bottom: 1rem;
+            }
+            .nav {
+                width: 100%;
+                flex-direction: column;
+                align-items: flex-start;
+                padding-top: 1rem;
+            }
+            .menu-link, .dropdown > button {
+                width: 100%;
+                text-align: left;
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+
+            .dropdown-content {
+                position: static !important;
+                width: 100%;
+                border-radius: 0;
+                box-shadow: none;
+                border-top: 1px solid #e2e8f0;
+                padding-left: 1rem;
+            }
+            .submenu-content {
+                position: static !important;
+                width: 100%;
+                border-radius: 0;
+                box-shadow: none;
+                border-left: none;
+                border-top: 1px solid #e2e8f0;
+                padding-left: 2rem;
+            }
+
+            .ph-caret-down, .ph-caret-right {
+                transform: rotate(0deg) !important;
+            }
+            .menu-link[aria-expanded="true"] .ph-caret-down,
+            .submenu-trigger[aria-expanded="true"] .ph-caret-right {
+                transform: rotate(180deg) !important;
+            }
+        }
+        
+    </style>
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+
+<header class="bg-green-700 text-white p-4 flex flex-col md:flex-row items-center justify-between shadow-lg sticky top-0 z-50 rounded-b-xl">
+    <div class="font-extrabold text-3xl tracking-wider select-none mb-4 md:mb-0" tabindex="0">
+        <span class="text-white">BFM</span><span class="text-yellow-300"> FROTAS</span>
+    </div>
+
+    <nav class="flex flex-wrap gap-x-4 gap-y-2 items-center justify-center" role="navigation" aria-label="Menu principal">
+        <a href="dashboard.html" class="menu-link text-white font-semibold text-base py-2 px-2 relative whitespace-nowrap border-b-4 border-transparent hover:text-yellow-300 hover:border-yellow-300 transition-colors duration-300">
+            Dashboard
+        </a>
+
+        <div class="relative dropdown">
+            <button class="menu-link text-white font-semibold text-base py-2 px-2 border-b-4 border-transparent transition-colors duration-300 flex items-center gap-1" type="button" aria-haspopup="true" aria-expanded="false">
+                Configurações <i class="ph ph-caret-down ml-1 transition-transform duration-300"></i>
+            </button>
+            <div class="dropdown-content absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-50" role="menu" aria-orientation="vertical">
+         
+                <div class="relative submenu">
+                    <button class="submenu-trigger" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                        Veículos <i class="ph ph-caret-right ml-auto"></i>
+                    </button>
+                    <div class="submenu-content absolute left-full top-0 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-50">
+                        <a href="cadastroveiculos.html" class="dropdown-item" role="menuitem">Cadastro de Veículos</a>
+                        <a href="cadastro_marcas.html" class="dropdown-item" role="menuitem">Cadastro de Marcas</a>
+                        <a href="cadastro_modelo.html" class="dropdown-item" role="menuitem">Cadastro de Modelo</a>
+                        <a href="cadastro_tipo_veiculo.html" class="dropdown-item" role="menuitem">Cadastro Tipo Veículo</a>
+                    </div>
+                </div>
+
+                <div class="relative submenu">
+                    <button class="submenu-trigger" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                        Serviços <i class="ph ph-caret-right ml-auto"></i>
+                    </button>
+                    <div class="submenu-content absolute left-full top-0 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-50">
+                        <a href="servicos.html" class="dropdown-item" role="menuitem">Cadastro de Serviços</a>
+                        <a href="cadastro-compartimentos.html" class="dropdown-item" role="menuitem">Conjunto/Sistema</a>
+                        <a href="cadastro_acoes.html" class="dropdown-item" role="menuitem">Operação Executada</a>
+                        <a href="cadastro_conjunto.html" class="dropdown-item" role="menuitem">Componente do Conjunto</a>
+                    </div>
+                </div>
+
+                <div class="relative submenu">
+                    <button class="submenu-trigger" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                        Oficina <i class="ph ph-caret-right ml-auto"></i>
+                    </button>
+                    <div class="submenu-content absolute left-full top-0 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-50">
+                        <a href="oficinas.html" class="dropdown-item" role="menuitem">Cadastro Oficina</a>
+                        <a href="cadastro_tecnicos.html" class="dropdown-item" role="menuitem">Cadastro Técnico</a>
+                    </div>
+                </div>
+
+                <div class="relative submenu">
+                    <button class="submenu-trigger" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                        Produtos <i class="ph ph-caret-right ml-auto"></i>
+                    </button>
+                    <div class="submenu-content absolute left-full top-0 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-50">
+                        <a href="produto.html" class="dropdown-item" role="menuitem">Cadastro Produto</a>
+                        <a href="fornecedor.html" class="dropdown-item" role="menuitem">Cadastro Fornecedores</a>
+                    </div>
+                </div>
+                       <a href="cadastro_periodicidade.html" class="dropdown-item" role="menuitem">Plano de Manutenção</a>
+                
+            </div>
+        </div>
+
+        <div class="relative dropdown">
+            <button class="menu-link text-white font-semibold text-base py-2 px-2 border-b-4 border-transparent transition-colors duration-300 flex items-center gap-1" type="button" aria-haspopup="true" aria-expanded="false">
+                Plano de Manutenção <i class="ph ph-caret-down ml-1 transition-transform duration-300"></i>
+            </button>
+            <div class="dropdown-content absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-50" role="menu" aria-orientation="vertical">
+                <a href="pmp.html" class="dropdown-item" role="menuitem">PMP - Preventiva</a>
+                <a href="PL.html" class="dropdown-item" role="menuitem">PL - Lubrificação</a>
+                <a href="pmpr.html" class="dropdown-item" role="menuitem">PMPR - Preditiva Programada</a>
+                <a href="pi.html" class="dropdown-item" role="menuitem">PI - Inspeção</a>
+            </div>
+        </div>
+
+        <a href="agendamento.html" class="menu-link text-white font-semibold text-base py-2 px-2 relative whitespace-nowrap border-b-4 border-transparent hover:text-yellow-300 hover:border-yellow-300 transition-colors duration-300">
+            Ordem de Serviço
+        </a>
+        <a href="controle.html" class="menu-link text-white font-semibold text-base py-2 px-2 relative whitespace-nowrap border-b-4 border-transparent hover:text-yellow-300 hover:border-yellow-300 transition-colors duration-300">
+            Gerenciamento
+        </a>
+        <a href="seguranca.html" class="menu-link text-white font-semibold text-base py-2 px-2 relative whitespace-nowrap border-b-4 border-transparent hover:text-yellow-300 hover:border-yellow-300 transition-colors duration-300">
+            Segurança
+        </a>
+
+        <div class="relative dropdown">
+            <button class="menu-link text-white font-semibold text-base py-2 px-2 border-b-4 border-transparent transition-colors duration-300 flex items-center gap-1" type="button" aria-haspopup="true" aria-expanded="false" id="alertBellButton">
+                <i class="ph ph-bell text-xl"></i>
+                <span id="alertCount" class="bg-red-500 text-white text-xs font-bold rounded-full px-2 py-1 -mt-4 -mr-4 absolute top-1/2 left-1/2 transform translate-x-1/4 -translate-y-1/4" style="display: none;">0</span>
+            </button>
+            <div id="alertDropdown" class="dropdown-content absolute right-0 mt-2 w-80 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-50">
+                <div class="py-1" role="menu" aria-orientation="vertical">
+                    <h3 class="px-4 py-2 text-lg font-bold text-gray-800 border-b border-gray-200">Notificações</h3>
+                    <div id="alertList" class="p-4">
+                        <p class="text-sm text-gray-500">Nenhum alerta no momento.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <a href="#" onclick="logout()" class="menu-link text-white font-semibold text-base py-2 px-2 hover:text-yellow-300 hover:border-yellow-300 border-b-4 border-transparent transition-colors duration-300">
+            Sair
+        </a>
+    </nav>
+</header>
+
+    <main class="max-w-4xl mx-auto my-12 px-4 md:px-6">
+        <h1 class="font-extrabold text-5xl mb-10 text-center text-green-800 tracking-wide select-none">Cadastro de Operação Executada</h1>
+        
+        <section class="bg-white p-6 md:p-8 rounded-3xl shadow-lg mb-12" aria-label="Formulário de Cadastro de Operação">
+            <h2 class="text-2xl font-bold text-green-800 mb-6">Cadastrar Nova Operação</h2>
+            <form id="operacaoForm" class="flex flex-col gap-4">
+                <div>
+                    <label for="nomeOperacao" class="block font-semibold mb-2 text-gray-700">Nome da Operação:</label>
+                    <input type="text" id="nomeOperacao" required class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-green-500" placeholder="Ex: Troca de Óleo, Verificação">
+                </div>
+                <div class="flex justify-center mt-6">
+                    <button type="submit" class="bg-green-800 text-white font-bold text-lg py-3 px-8 rounded-lg hover:bg-green-700 transition-colors duration-300 shadow-md">
+                        Cadastrar Operação
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <section class="bg-white p-6 md:p-8 rounded-3xl shadow-lg" aria-label="Tabela de Operações Cadastradas">
+            <h2 class="text-2xl font-bold text-green-800 mb-6">Operações Cadastradas</h2>
+            <div class="overflow-x-auto rounded-lg">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome da Operação</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="operacoesTableBody">
+                        </tbody>
+                </table>
+            </div>
+            <div id="no-operacoes-message" class="text-center text-gray-500 mt-6">
+                Nenhuma operação cadastrada ainda.
+            </div>
+        </section>
+
+        <div id="editOperacaoModal" class="fixed inset-0 bg-gray-800 bg-opacity-60 hidden items-center justify-center z-[1000] p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col" role="dialog" aria-modal="true" aria-labelledby="editOperacaoModalTitle">
+                <div class="flex justify-between items-center p-5 border-b border-gray-200">
+                    <h3 id="editOperacaoModalTitle" class="text-2xl font-bold text-green-900">Editar Operação</h3>
+                    <button onclick="closeEditOperacaoModal()" class="text-gray-400 hover:text-red-600 transition-colors p-1 rounded-full" aria-label="Fechar modal">
+                        <i class="ph ph-x-circle text-3xl"></i>
+                    </button>
+                </div>
+                <div class="overflow-y-auto p-8">
+                    <form id="editOperacaoForm" class="flex flex-col gap-4">
+                        <div>
+                            <label for="edit-nomeOperacao" class="block font-semibold mb-2">Nome da Operação:</label>
+                            <input type="text" id="edit-nomeOperacao" required class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-green-500">
+                        </div>
+                    </form>
+                </div>
+                <div class="flex justify-end items-center gap-4 mt-8 pt-5 border-t border-gray-200 px-8 pb-8">
+                    <button type="button" onclick="closeEditOperacaoModal()" class="bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-300 transition-colors">Cancelar</button>
+                    <button type="submit" form="editOperacaoForm" class="bg-green-800 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700 transition-colors">Salvar Alterações</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="confirmModal" class="fixed inset-0 bg-gray-800 bg-opacity-60 hidden items-center justify-center z-[1000] p-4">
+            <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
+                <h3 id="confirmModalTitle" class="text-xl font-bold text-gray-800 mb-4">Confirmar Ação</h3>
+                <p id="confirmModalMessage" class="text-gray-600 mb-6">Você tem certeza que deseja excluir esta operação?</p>
+                <div class="flex justify-end gap-4">
+                    <button id="confirmModalNo" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg">Não</button>
+                    <button id="confirmModalYes" class="bg-red-600 text-white font-bold py-2 px-4 rounded-lg">Sim, Excluir</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/operacoes.js"></script>
+   
+</body>
+</html>
