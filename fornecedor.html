@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastro de Fornecedores - BFM Frotas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        /* Base styles for the entire body */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f4f8; /* Light background for a clean look */
+            color: #2c3e50; /* Darker text for readability */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased; /* Smoother font rendering */
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Custom animation for dropdown fade-in (downwards) */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-down { /* Used for main menus now */
+            animation: fadeInDown 0.3s ease-out forwards;
+            transform-origin: top center;
+        }
+
+        /* Custom animation for dropdown fade-in (sideways) */
+        @keyframes fadeInRight {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .animate-fade-in-right { /* Used for sub-menus now */
+            animation: fadeInRight 0.3s ease-out forwards;
+            transform-origin: left center;
+        }
+
+        /* Custom scrollbar styling for a consistent look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: rgb(20, 139, 36); /* Semi-transparent primary green */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(26, 77, 62, 0.1); /* Lighter track */
+        }
+
+        /* Base dropdown item styling */
+        .dropdown-item {
+            padding: 0.75rem 1.5rem;
+            color: #374151; /* gray-700 */
+            font-weight: 500;
+            white-space: nowrap;
+            display: block; /* Ensure it takes full width */
+            width: 100%;
+            text-align: left;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .dropdown-item:hover {
+            background-color: #e0f2f7; /* lighter blue/greenish hue for hover */
+            color: #1e7e15; /* primary green for hover text */
+        }
+
+        /* Specific styling for nested submenu trigger buttons */
+        .submenu-trigger {
+            width: 100%;
+            text-align: left;
+            padding: 0.75rem 1.5rem;
+            color: #374151;
+            font-weight: 500;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: transparent; /* Reset button default bg */
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .submenu-trigger:hover {
+            background-color: #e0f2f7;
+            color: #0da326;
+        }
+
+        /* Adjust caret rotation for main dropdowns (back to caret-down) */
+        .ph-caret-down {
+            transition: transform 0.2s ease-in-out;
+        }
+        .menu-link[aria-expanded="true"] .ph-caret-down {
+            transform: rotate(180deg); /* Points up when open */
+        }
+
+        /* Adjust caret rotation for submenus (still caret-right) */
+        .ph-caret-right {
+            transition: transform 0.2s ease-in-out;
+        }
+        .submenu-trigger[aria-expanded="true"] .ph-caret-right {
+            transform: rotate(90deg); /* Rotates down when open */
+        }
+
+        /* Dropdown content positioning for downwards opening (main menus) */
+        .dropdown-content {
+            position: absolute;
+            top: 100%; /* Position directly below the parent button */
+            left: 0;
+            background-color: white;
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* shadow-xl */
+            min-width: 220px;
+            z-index: 9999;
+            flex-direction: column;
+            border: 1px solid #e2e8f0; /* Subtle border for definition */
+            padding: 0.5rem 0; /* Add some vertical padding inside the menu */
+        }
+
+        /* Submenu content positioning for side opening (submenus) */
+        .submenu-content {
+            position: absolute;
+            top: 0; /* Align top with parent submenu trigger */
+            left: 100%; /* Position to the right of parent submenu trigger */
+            margin-left: 0.5rem; /* Small gap */
+            background-color: white;
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* shadow-xl */
+            min-width: 220px;
+            z-index: 9999;
+            flex-direction: column;
+            border: 1px solid #e2e8f0; /* Subtle border for definition */
+            border-left: 1px solid #e2e8f0; /* Add a subtle left border for visual separation */
+            padding: 0.5rem 0; /* Add some vertical padding inside the menu */
+        }
+
+
+        /* Active menu styling */
+        .active-menu {
+            color: #facc15 !important; /* yellow-300 */
+            border-bottom: 4px solid #facc15 !important; /* yellow-300 */
+        }
+
+        /* Responsive adjustments for mobile */
+        @media (max-width: 767px) { /* Tailwind's md breakpoint is 768px */
+            .md\:flex-row {
+                flex-direction: column;
+            }
+            .md\:mb-0 {
+                margin-bottom: 1rem; /* Adjust margin for mobile brand */
+            }
+            .nav {
+                width: 100%;
+                flex-direction: column;
+                align-items: flex-start;
+                padding-top: 1rem;
+            }
+            .menu-link, .dropdown > button {
+                width: 100%;
+                text-align: left;
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            .dropdown-content {
+                position: static; /* Stack vertically in mobile */
+                width: 100%; /* Take full width */
+                border-top: 1px solid #e2e8f0;
+                border-left: none; /* No left border */
+                box-shadow: none; /* No shadow */
+                border-radius: 0; /* No radius */
+                padding-left: 1rem; /* Add some padding */
+            }
+            .submenu-content {
+                position: static; /* Stack vertically in mobile */
+                width: 100%; /* Take full width */
+                border-top: 1px solid #e2e8f0;
+                border-left: none; /* No left border */
+                box-shadow: none; /* No shadow */
+                border-radius: 0; /* No radius */
+                padding-left: 2rem; /* Indent sub-submenus */
+            }
+            .ph-caret-down, .ph-caret-right {
+                transform: rotate(0deg) !important; /* Reset rotation for mobile */
+            }
+            .menu-link[aria-expanded="true"] .ph-caret-down,
+            .submenu-trigger[aria-expanded="true"] .ph-caret-right {
+                transform: rotate(180deg) !important; /* Still rotate down for consistency in mobile dropdowns */
+            }
+        }
+
+        /* --- Styles for the main content (form and table) --- */
+        .main-content-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            width: 100%;
+        }
+
+        .form-container, .list-container {
+            background-color: #ffffff;
+            padding: 2.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            width: 100%;
+            max-width: 700px; /* Increased max-width for more fields */
+        }
+
+        .form-container h1, .list-container h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #16a34a; /* green-600 */
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            justify-content: center; /* Centraliza o título */
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group input[type="tel"],
+        .form-group input[type="number"],
+        .form-group textarea, /* Added textarea */
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            color: #475569;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            background-color: white; /* Ensure consistent background */
+        }
+
+        .form-group input[type="text"]:focus,
+        .form-group input[type="email"]:focus,
+        .form-group input[type="tel"]:focus,
+        .form-group input[type="number"]:focus,
+        .form-group textarea:focus, /* Added textarea */
+        .form-group select:focus {
+            outline: none;
+            border-color: #16a34a;
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2);
+        }
+
+        .form-group input[readonly] {
+            background-color: #e2e8f0;
+            cursor: not-allowed;
+        }
+
+        .btn-submit {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: auto;
+            padding: 1rem 1.5rem;
+            background-color: #16a34a;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1.125rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            margin-top: 2rem;
+            margin-left: auto; /* Centralize o botão em relação ao formulário */
+            margin-right: auto;
+        }
+
+        .btn-submit:hover {
+            background-color: #15803d;
+            transform: translateY(-1px);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+        }
+
+        .data-table th, .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top; /* Alinha o conteúdo ao topo */
+        }
+
+        .data-table th {
+            background-color: #f1f5f9;
+            color: #334155;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-edit {
+            background-color: #3b82f6;
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .btn-edit:hover {
+            background-color: #2563eb;
+        }
+
+        .btn-delete {
+            background-color: #ef4444;
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .btn-delete:hover {
+            background-color: #dc2626;
+        }
+
+        /* Modal Specific Styles */
+        .modal, .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10001;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal.active, .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            padding: 2.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 700px; /* Increased max-width for more fields */
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal.active .modal-content, .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 1rem;
+        }
+
+        .modal-header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #16a34a;
+        }
+
+        .modal-close-button {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #64748b;
+            transition: color 0.2s ease;
+        }
+
+        .modal-close-button:hover {
+            color: #334155;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 2rem;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 1.5rem;
+        }
+
+        .btn-cancel {
+            background-color: #64748b;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border: none;
+        }
+        .btn-cancel:hover {
+            background-color: #475569;
+        }
+
+        .btn-save-modal {
+            background-color: #16a34a;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border: none;
+        }
+        .btn-save-modal:hover {
+            background-color: #15803d;
+        }
+
+        /* Feedback Message (Toast) */
+        #userFeedback {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            color: white;
+            z-index: 10002;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+        }
+        #userFeedback.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Classes for feedback types */
+        #userFeedback.bg-green-100 { background-color: #d1fae5; color: #065f46; }
+        #userFeedback.bg-red-100 { background-color: #fee2e2; color: #991b1b; }
+        #userFeedback.bg-yellow-100 { background-color: #fffbeb; color: #92400e; }
+        #userFeedback.bg-blue-100 { background-color: #dbeafe; color: #1e40af; }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+    <header class="bg-green-700 text-white p-4 flex flex-col md:flex-row items-center justify-between shadow-lg sticky top-0 z-50 rounded-b-xl">
+        <div class="font-extrabold text-3xl tracking-wider select-none mb-4 md:mb-0" tabindex="0">
+            <span class="text-white">BFM</span><span class="text-yellow-300"> FROTAS</span>
+        </div>
+
+        <nav class="flex flex-wrap gap-x-4 gap-y-2 items-center justify-center" role="navigation" aria-label="Menu principal">
+
+            <a href="dashboard.html" class="menu-link text-white font-semibold text-base py-2 px-2 relative whitespace-nowrap border-b-4 border-transparent hover:text-yellow-300 hover:border-yellow-300 transition">
+                Dashboard
+            </a>
+
+            <div class="relative dropdown" id="dropdown-configuracoes">
+                <button class="menu-link text-white font-semibold text-base py-2 px-2 active-menu hover:text-yellow-300 hover:border-yellow-300 border-b-4 border-transparent transition flex items-center gap-1" type="button" aria-haspopup="true" aria-expanded="false">
+                    Configurações <i class="ph ph-caret-down ml-1"></i> </button>
+
+                <div id="menu-configuracoes" class="dropdown-content hidden">
+                    <div class="relative group" id="dropdown-veiculos-submenu">
+                        <button class="submenu-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+                            Veículos
+                            <i class="ph ph-caret-right ml-2"></i>
+                        </button>
+
+                        <div id="menu-veiculos-submenu" class="submenu-content hidden">
+                            <a href="cadastroveiculos.html" class="dropdown-item">Cadastro de Veículos</a>
+                            <a href="cadastro_marcas.html" class="dropdown-item">Cadastro de Marcas</a>
+                            <a href="cadastro_modelo.html" class="dropdown-item">Cadastro de Modelo</a>
+                            <a href="cadastro_tipo_veiculo.html" class="dropdown-item">Cadastro Tipo Veículo</a>
+                        </div>
+                    </div>
+                    <div class="relative group" id="dropdown-servicos-submenu">
+                        <button class="submenu-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+                            Serviços
+                            <i class="ph ph-caret-right ml-2"></i>
+                        </button>
+
+                        <div id="menu-servicos-submenu" class="submenu-content hidden">
+                            <a href="servicos.html" class="dropdown-item">Cadastro de Serviços</a>
+                            <a href="cadastro-compartimentos.html" class="dropdown-item">Conjunto/Sistema</a>
+                            <a href="cadastro_acoes.html" class="dropdown-item">Operação Executada</a>
+                            <a href="cadastro_conjunto.html" class="dropdown-item">Componente do Conjunto</a>
+                        </div>
+                    </div>
+                    <div class="relative group" id="dropdown-oficina-submenu">
+                        <button class="submenu-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+                            Oficina
+                            <i class="ph ph-caret-right ml-2"></i>
+                        </button>
+                        <div id="menu-oficina-submenu" class="submenu-content hidden">
+                            <a href="oficinas.html" class="dropdown-item">Cadastro Oficina</a>
+                            <a href="cadastro_tecnicos.html" class="dropdown-item">Cadastro Técnico</a>
+                        </div>
+                    </div>
+                    <div class="relative group" id="dropdown-produtos-submenu">
+                        <button class="submenu-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+                            Produtos
+                            <i class="ph ph-caret-right ml-2"></i>
+                        </button>
+                        <div id="menu-produtos-submenu" class="submenu-content hidden">
+                            <a href="produto.html" class="dropdown-item">Cadastro Produto</a>
+                            <a href="fornecedor.html" class="dropdown-item">Cadastro Fornecedores</a>
+                        </div>
+                    </div>
+                    <a href="cadastro_periodicidade.html" class="dropdown-item">Plano de Manutenção</a>
+                </div>
+            </div>
+
+            <div class="relative dropdown" id="dropdown-plano">
+                <button class="menu-link text-white font-semibold text-base py-2 px-2 hover:text-yellow-300 hover:border-yellow-300 border-b-4 border-transparent transition flex items-center gap-1" type="button" aria-haspopup="true" aria-expanded="false">
+                    Plano de Manutenção <i class="ph ph-caret-down ml-1"></i> </button>
+                <div id="menu-plano" class="dropdown-content hidden">
+                    <a href="pmp.html" class="dropdown-item">PMP - Preventiva</a>
+                    <a href="PL.html" class="dropdown-item">PL - Lubrificação</a>
+                    <a href="pmpr.html" class="dropdown-item">PMPR - Preditiva Programada</a>
+                    <a href="pi.html" class="dropdown-item">PI - Inspeção</a>
+                </div>
+            </div>
+
+            <div class="relative dropdown" id="dropdown-os">
+                <button class="menu-link text-white font-semibold text-base py-2 px-2 hover:text-yellow-300 hover:border-yellow-300 border-b-4 border-transparent transition flex items-center gap-1" type="button" aria-haspopup="true" aria-expanded="false">
+                    Ordem de Serviço <i class="ph ph-caret-down ml-1"></i> </button>
+                <div id="menu-os" class="dropdown-content hidden">
+                    <a href="agendamento.html" class="dropdown-item">Gerar Ordem de Serviço</a>
+                </div>
+            </div>
+
+            <div class="relative dropdown" id="dropdown-gerenciamento">
+                <button class="menu-link text-white font-semibold text-base py-2 px-2 hover:text-yellow-300 hover:border-yellow-300 border-b-4 border-transparent transition flex items-center gap-1" type="button" aria-haspopup="true" aria-expanded="false">
+                    Gerenciamento <i class="ph ph-caret-down ml-1"></i> </button>
+                <div id="menu-gerenciamento" class="dropdown-content hidden">
+                    <a href="controle.html" class="dropdown-item">Controle</a>
+                    <a href="visaodafrota.html" class="dropdown-item">Visão Geral de Frota</a>
+                </div>
+            </div>
+
+            <a href="seguranca.html" class="menu-link text-white font-semibold text-base py-2 px-2 hover:text-yellow-300 hover:border-yellow-300 border-b-4 border-transparent transition">
+                Segurança
+            </a>
+
+            <div class="relative dropdown" id="dropdown-alerts">
+                <button class="menu-link text-white font-semibold text-base py-2 px-2 hover:text-yellow-300 hover:border-yellow-300 border-b-4 border-transparent transition flex items-center gap-1" type="button" aria-haspopup="true" aria-expanded="false" id="alertBellButton">
+                    <i class="ph ph-bell text-xl"></i>
+                    <span id="alertCount" class="bg-red-500 text-white text-xs font-bold rounded-full px-2 py-1 -mt-4 -mr-4 absolute top-1/2 left-1/2 transform translate-x-1/4 -translate-y-1/4" style="display: none;">0</span>
+                </button>
+                <div id="alertDropdown" class="dropdown-content hidden absolute top-full right-0 bg-white rounded-xl shadow-xl min-w-[300px] flex-col z-[9999] p-4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">Notificações</h3>
+                    <div id="alertList" class="text-gray-700">
+                        <p class="text-sm text-gray-500">Nenhum alerta no momento.</p>
+                    </div>
+                </div>
+            </div>
+            <a href="#" onclick="logout()" class="menu-link text-white font-semibold text-base py-2 px-2 hover:text-yellow-300 hover:border-yellow-300 border-b-4 border-transparent transition">
+                Sair
+            </a>
+        </nav>
+    </header>
+
+    <div class="main-content-area">
+        <div class="form-container">
+            <h1 class="text-center text-green-600 text-3xl font-bold mb-6">
+                <i class="ph ph-truck-trailer"></i> Cadastro de Fornecedor
+            </h1>
+            <form id="supplierForm" class="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                <div class="form-group">
+                    <label for="name"><i class="ph ph-signature"></i> Nome do Fornecedor</label>
+                    <input type="text" id="name" name="name" placeholder="Nome Completo do Fornecedor" required>
+                </div>
+                <div class="form-group">
+                    <label for="cnpj"><i class="ph ph-identification-badge"></i> CNPJ</label>
+                    <input type="text" id="cnpj" name="cnpj" placeholder="Ex: 00.000.000/0000-00" required>
+                </div>
+                <div class="form-group">
+                    <label for="contactPerson"><i class="ph ph-user"></i> Pessoa de Contato</label>
+                    <input type="text" id="contactPerson" name="contactPerson" placeholder="Nome da pessoa de contato" required>
+                </div>
+                <div class="form-group">
+                    <label for="email"><i class="ph ph-at"></i> E-mail</label>
+                    <input type="email" id="email" name="email" placeholder="email@exemplo.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone"><i class="ph ph-phone"></i> Telefone</label>
+                    <input type="tel" id="phone" name="phone" placeholder="(XX) XXXXX-XXXX" required>
+                </div>
+                <div class="form-group">
+                    <label for="address"><i class="ph ph-map-pin"></i> Endereço</label>
+                    <input type="text" id="address" name="address" placeholder="Rua, Número, Bairro, Cidade, Estado" required>
+                </div>
+                <div class="form-group md:col-span-2">
+                    <label for="notes"><i class="ph ph-note-pencil"></i> Observações</label>
+                    <textarea id="notes" name="notes" rows="3" placeholder="Informações adicionais sobre o fornecedor..."></textarea>
+                </div>
+                <div class="md:col-span-2 flex justify-center">
+                    <button type="submit" class="btn-submit">
+                        <i class="ph ph-plus-circle"></i> Cadastrar Fornecedor
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="list-container">
+            <h2 class="text-center text-green-600 text-3xl font-bold mb-6">
+                <i class="ph ph-clipboard-text"></i> Fornecedores Cadastrados
+            </h2>
+            <div class="overflow-x-auto">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>CNPJ</th>
+                            <th>Contato</th>
+                            <th>E-mail</th>
+                            <th>Telefone</th>
+                            <th>Endereço</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="supplierTableBody">
+                        <tr>
+                            <td colspan="7" class="text-center text-gray-500 py-4" id="emptyStateRow">Nenhum fornecedor cadastrado.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="editSupplierModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Editar Fornecedor</h2>
+                <button class="modal-close-button" id="closeModalBtn">&times;</button>
+            </div>
+            <form id="editSupplierForm">
+                <input type="hidden" id="editSupplierId">
+                <div class="form-group">
+                    <label for="editName"><i class="ph ph-signature"></i> Nome do Fornecedor</label>
+                    <input type="text" id="editName" name="editName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editCnpj"><i class="ph ph-identification-badge"></i> CNPJ</label>
+                    <input type="text" id="editCnpj" name="editCnpj" required>
+                </div>
+                <div class="form-group">
+                    <label for="editContactPerson"><i class="ph ph-user"></i> Pessoa de Contato</label>
+                    <input type="text" id="editContactPerson" name="editContactPerson" required>
+                </div>
+                <div class="form-group">
+                    <label for="editEmail"><i class="ph ph-at"></i> E-mail</label>
+                    <input type="email" id="editEmail" name="editEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="editPhone"><i class="ph ph-phone"></i> Telefone</label>
+                    <input type="tel" id="editPhone" name="editPhone" required>
+                </div>
+                <div class="form-group">
+                    <label for="editAddress"><i class="ph ph-map-pin"></i> Endereço</label>
+                    <input type="text" id="editAddress" name="editAddress" required>
+                </div>
+                <div class="form-group">
+                    <label for="editNotes"><i class="ph ph-note-pencil"></i> Observações</label>
+                    <textarea id="editNotes" name="editNotes" rows="3"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" id="cancelEditBtn">Cancelar</button>
+                    <button type="submit" class="btn-save-modal" id="saveChangesBtn">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="userFeedback" class="hidden"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Lógica do menu dropdown (mantida como no código original)
+            const dropdowns = document.querySelectorAll('.dropdown');
+            dropdowns.forEach(dropdown => {
+                const button = dropdown.querySelector('button[aria-haspopup="true"]');
+                const dropdownContent = dropdown.querySelector('.dropdown-content');
+
+                if (button && dropdownContent) {
+                    button.addEventListener('click', function(event) {
+                        event.stopPropagation();
+
+                        dropdowns.forEach(otherDropdown => {
+                            const otherDropdownContent = otherDropdown.querySelector('.dropdown-content');
+                            const otherButton = otherDropdown.querySelector('button[aria-haspopup="true"]');
+                            if (otherDropdown !== dropdown && otherDropdownContent && !otherDropdownContent.classList.contains('hidden')) {
+                                otherDropdownContent.classList.add('hidden');
+                                otherDropdownContent.classList.remove('animate-fade-in-down');
+                                if (otherButton) {
+                                    otherButton.setAttribute('aria-expanded', 'false');
+                                }
+                            }
+                        });
+
+                        dropdownContent.classList.toggle('hidden');
+                        dropdownContent.classList.toggle('animate-fade-in-down');
+                        button.setAttribute('aria-expanded', dropdownContent.classList.contains('hidden') ? 'false' : 'true');
+
+                        const openSubmenus = dropdownContent.querySelectorAll('.submenu-content:not(.hidden)');
+                        openSubmenus.forEach(submenu => {
+                            submenu.classList.add('hidden');
+                            submenu.classList.remove('animate-fade-in-right');
+                            const submenuTrigger = submenu.previousElementSibling;
+                            if (submenuTrigger && submenuTrigger.hasAttribute('aria-expanded')) {
+                                submenuTrigger.setAttribute('aria-expanded', 'false');
+                            }
+                        });
+                    });
+
+                    dropdownContent.addEventListener('click', function(event) {
+                        event.stopPropagation();
+                    });
+                }
+            });
+
+            document.addEventListener('click', function() {
+                dropdowns.forEach(dropdown => {
+                    const dropdownContent = dropdown.querySelector('.dropdown-content');
+                    const button = dropdown.querySelector('button[aria-haspopup="true"]');
+                    if (dropdownContent && !dropdownContent.classList.contains('hidden')) {
+                        dropdownContent.classList.add('hidden');
+                        dropdownContent.classList.remove('animate-fade-in-down');
+                        if (button) {
+                            button.setAttribute('aria-expanded', 'false');
+                        }
+                    }
+                });
+            });
+
+            const submenuTriggers = document.querySelectorAll('.submenu-trigger');
+            submenuTriggers.forEach(trigger => {
+                trigger.addEventListener('click', function(event) {
+                    event.stopPropagation();
+
+                    const submenuContent = this.nextElementSibling;
+                    if (submenuContent && submenuContent.classList.contains('submenu-content')) {
+                        const parentDropdownContent = this.closest('.dropdown-content');
+                        if (parentDropdownContent) {
+                            const siblings = parentDropdownContent.querySelectorAll('.submenu-content:not(.hidden)');
+                            siblings.forEach(sibling => {
+                                if (sibling !== submenuContent) {
+                                    sibling.classList.add('hidden');
+                                    sibling.classList.remove('animate-fade-in-right');
+                                    const siblingTrigger = sibling.previousElementSibling;
+                                    if (siblingTrigger) {
+                                        siblingTrigger.setAttribute('aria-expanded', 'false');
+                                    }
+                                }
+                            });
+                        }
+
+                        submenuContent.classList.toggle('hidden');
+                        submenuContent.classList.toggle('animate-fade-in-right');
+                        this.setAttribute('aria-expanded', submenuContent.classList.contains('hidden') ? 'false' : 'true');
+                    }
+                });
+            });
+
+            const alertBellButton = document.getElementById('alertBellButton');
+            const alertDropdown = document.getElementById('alertDropdown');
+
+            if (alertBellButton && alertDropdown) {
+                alertBellButton.addEventListener('click', function(event) {
+                    event.stopPropagation();
+
+                    dropdowns.forEach(otherDropdown => {
+                        const otherDropdownContent = otherDropdown.querySelector('.dropdown-content');
+                        if (otherDropdownContent && otherDropdownContent !== alertDropdown && !otherDropdownContent.classList.contains('hidden')) {
+                            otherDropdownContent.classList.add('hidden');
+                            otherDropdownContent.classList.remove('animate-fade-in-down');
+                            const otherButton = otherDropdown.querySelector('button[aria-haspopup="true"]');
+                            if (otherButton) otherButton.setAttribute('aria-expanded', 'false');
+                        }
+                    });
+
+                    const isHidden = alertDropdown.classList.contains('hidden');
+                    if (isHidden) {
+                        alertDropdown.classList.remove('hidden');
+                        alertDropdown.classList.add('animate-fade-in-down');
+                    } else {
+                        alertDropdown.classList.add('hidden');
+                        alertDropdown.classList.remove('animate-fade-in-down');
+                    }
+                });
+
+                alertDropdown.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                });
+            }
+
+            window.logout = function() {
+                alert('Você foi desconectado!');
+                window.location.href = 'login.html';
+            };
+
+            // --- Lógica para Cadastro, Edição e Exclusão de Fornecedores ---
+            const supplierForm = document.getElementById('supplierForm');
+            const supplierTableBody = document.getElementById('supplierTableBody');
+            const editSupplierModal = document.getElementById('editSupplierModal');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+            const saveChangesBtn = document.getElementById('saveChangesBtn');
+            const cancelEditBtn = document.getElementById('cancelEditBtn');
+            const userFeedback = document.getElementById('userFeedback');
+            const emptyStateRow = document.getElementById('emptyStateRow');
+
+            let suppliers = []; // Array para armazenar os fornecedores
+
+            // Função para exibir feedback (toast)
+            function showFeedback(message, type) {
+                userFeedback.textContent = message;
+                userFeedback.className = ''; // Reset classes
+                userFeedback.classList.add(type === 'success' ? 'bg-green-100' : 'bg-red-100', 'show'); // Tailwind classes
+                setTimeout(() => {
+                    userFeedback.classList.remove('show');
+                }, 3000); // Esconde o toast após 3 segundos
+            }
+
+            // Função para renderizar a tabela de fornecedores
+            function renderSuppliers() {
+                supplierTableBody.innerHTML = ''; // Limpa a tabela existente
+
+                if (suppliers.length === 0) {
+                    emptyStateRow.style.display = 'table-row'; // Mostra a mensagem de "nenhum fornecedor"
+                } else {
+                    emptyStateRow.style.display = 'none'; // Esconde a mensagem
+                    suppliers.forEach(supplier => {
+                        const row = supplierTableBody.insertRow();
+                        row.setAttribute('data-id', supplier.id);
+
+                        row.innerHTML = `
+                            <td>${supplier.name}</td>
+                            <td>${supplier.cnpj}</td>
+                            <td>${supplier.contactPerson}</td>
+                            <td>${supplier.email}</td>
+                            <td>${supplier.phone}</td>
+                            <td>${supplier.address}</td>
+                            <td class="action-buttons">
+                                <button class="btn-edit" data-id="${supplier.id}">
+                                    <i class="ph ph-pencil-simple"></i> Editar
+                                </button>
+                                <button class="btn-delete" data-id="${supplier.id}">
+                                    <i class="ph ph-trash"></i> Excluir
+                                </button>
+                            </td>
+                        `;
+                    });
+                }
+            }
+
+            // Função para formatar CNPJ
+            function formatCnpj(cnpj) {
+                cnpj = cnpj.replace(/\D/g, ''); // Remove tudo que não é dígito
+                if (cnpj.length > 14) {
+                    cnpj = cnpj.substring(0, 14);
+                }
+                // (XX.XXX.XXX/XXXX-XX)
+                return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+            }
+
+            // Função para formatar Telefone (ex: (XX) XXXXX-XXXX)
+            function formatPhone(phone) {
+                phone = phone.replace(/\D/g, ''); // Remove tudo que não é dígito
+                if (phone.length > 11) {
+                    phone = phone.substring(0, 11);
+                }
+                if (phone.length === 11) {
+                    return phone.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+                } else if (phone.length === 10) {
+                    return phone.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3');
+                }
+                return phone;
+            }
+
+            // Adicionar novo fornecedor
+            supplierForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                const name = document.getElementById('name').value.trim();
+                const cnpj = formatCnpj(document.getElementById('cnpj').value.trim()); // Formata o CNPJ
+                const contactPerson = document.getElementById('contactPerson').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const phone = formatPhone(document.getElementById('phone').value.trim()); // Formata o telefone
+                const address = document.getElementById('address').value.trim();
+                const notes = document.getElementById('notes').value.trim();
+
+                if (name === '' || cnpj === '' || contactPerson === '' || email === '' || phone === '' || address === '') {
+                    showFeedback('Por favor, preencha todos os campos obrigatórios.', 'error');
+                    return;
+                }
+
+                const newSupplier = {
+                    id: Date.now().toString(), // ID único
+                    name,
+                    cnpj,
+                    contactPerson,
+                    email,
+                    phone,
+                    address,
+                    notes
+                };
+
+                suppliers.push(newSupplier);
+                renderSuppliers();
+                showFeedback(`Fornecedor "${name}" cadastrado com sucesso!`, 'success');
+                supplierForm.reset();
+            });
+
+            // Gerenciar cliques na tabela (editar/excluir)
+            supplierTableBody.addEventListener('click', function(event) {
+                const target = event.target;
+                const supplierId = target.dataset.id || target.closest('button')?.dataset.id;
+
+                if (!supplierId) return;
+
+                const supplier = suppliers.find(s => s.id === supplierId);
+                if (!supplier) return;
+
+                if (target.classList.contains('btn-edit') || target.closest('.btn-edit')) {
+                    // Preencher modal de edição
+                    document.getElementById('editSupplierId').value = supplier.id;
+                    document.getElementById('editName').value = supplier.name;
+                    document.getElementById('editCnpj').value = supplier.cnpj;
+                    document.getElementById('editContactPerson').value = supplier.contactPerson;
+                    document.getElementById('editEmail').value = supplier.email;
+                    document.getElementById('editPhone').value = supplier.phone;
+                    document.getElementById('editAddress').value = supplier.address;
+                    document.getElementById('editNotes').value = supplier.notes;
+
+                    editSupplierModal.classList.add('active'); // Mostrar modal
+                } else if (target.classList.contains('btn-delete') || target.closest('.btn-delete')) {
+                    if (confirm(`Tem certeza que deseja excluir o fornecedor "${supplier.name}"?`)) {
+                        suppliers = suppliers.filter(s => s.id !== supplierId);
+                        renderSuppliers();
+                        showFeedback(`Fornecedor "${supplier.name}" excluído com sucesso.`, 'success');
+                    }
+                }
+            });
+
+            // Salvar alterações do modal de edição
+            saveChangesBtn.addEventListener('click', function() {
+                const idToEdit = document.getElementById('editSupplierId').value;
+                const newName = document.getElementById('editName').value.trim();
+                const newCnpj = formatCnpj(document.getElementById('editCnpj').value.trim());
+                const newContactPerson = document.getElementById('editContactPerson').value.trim();
+                const newEmail = document.getElementById('editEmail').value.trim();
+                const newPhone = formatPhone(document.getElementById('editPhone').value.trim());
+                const newAddress = document.getElementById('editAddress').value.trim();
+                const newNotes = document.getElementById('editNotes').value.trim();
+
+                if (newName === '' || newCnpj === '' || newContactPerson === '' || newEmail === '' || newPhone === '' || newAddress === '') {
+                    showFeedback('Por favor, preencha todos os campos obrigatórios no modal.', 'error');
+                    return;
+                }
+
+                const supplierIndex = suppliers.findIndex(s => s.id === idToEdit);
+                if (supplierIndex !== -1) {
+                    suppliers[supplierIndex] = {
+                        id: idToEdit,
+                        name: newName,
+                        cnpj: newCnpj,
+                        contactPerson: newContactPerson,
+                        email: newEmail,
+                        phone: newPhone,
+                        address: newAddress,
+                        notes: newNotes
+                    };
+                    renderSuppliers();
+                    showFeedback(`Fornecedor "${newName}" atualizado com sucesso!`, 'success');
+                    editSupplierModal.classList.remove('active'); // Esconder modal
+                }
+            });
+
+            // Fechar modal de edição
+            closeModalBtn.addEventListener('click', function() {
+                editSupplierModal.classList.remove('active');
+            });
+
+            cancelEditBtn.addEventListener('click', function() {
+                editSupplierModal.classList.remove('active');
+            });
+
+            editSupplierModal.addEventListener('click', function(event) {
+                if (event.target === editSupplierModal) {
+                    editSupplierModal.classList.remove('active');
+                }
+            });
+
+            // Inicializar a renderização da tabela
+            renderSuppliers();
+
+            // Adicionar máscara para CNPJ
+            document.getElementById('cnpj').addEventListener('input', function (e) {
+                e.target.value = formatCnpj(e.target.value);
+            });
+            document.getElementById('editCnpj').addEventListener('input', function (e) {
+                e.target.value = formatCnpj(e.target.value);
+            });
+
+            // Adicionar máscara para Telefone
+            document.getElementById('phone').addEventListener('input', function (e) {
+                e.target.value = formatPhone(e.target.value);
+            });
+            document.getElementById('editPhone').addEventListener('input', function (e) {
+                e.target.value = formatPhone(e.target.value);
+            });
+        });
+    </script>
+</body>
+</html>
